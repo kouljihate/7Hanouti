@@ -14,8 +14,8 @@ class StockScreen(ft.Container):
         self._build()
 
     def _build(self):
-        lang = self.page.session.get("lang") or "ar"
-        self.products = get_products(self.page.session.get("user_id")) if self.page.session.get("user_id") else []
+        lang = self.page.session.store.get("lang") or "ar"
+        self.products = get_products(self.page.session.store.get("user_id")) if self.page.session.store.get("user_id") else []
         self.content = ft.Column(
             [
                 ft.Row(
@@ -104,7 +104,7 @@ class StockScreen(ft.Container):
             self._show_product_dialog(product=p)
 
     def _confirm_delete(self, product_id):
-        lang = self.page.session.get("lang") or "ar"
+        lang = self.page.session.store.get("lang") or "ar"
         dlg = ft.AlertDialog(
             title=ft.Text(t(lang, "confirm_delete")),
             content=ft.Text(t(lang, "confirm_delete_msg")),
@@ -124,7 +124,7 @@ class StockScreen(ft.Container):
         self._refresh()
 
     def _show_product_dialog(self, product=None):
-        lang = self.page.session.get("lang") or "ar"
+        lang = self.page.session.store.get("lang") or "ar"
         is_edit = product is not None
         name_inp = ft.TextField(label=t(lang, "product_name"), value=product["name"] if is_edit else "",
                                 text_align=ft.TextAlign.RIGHT)
@@ -149,7 +149,7 @@ class StockScreen(ft.Container):
                                    float(price_inp.value or 0), cat_inp.value.strip(), pkg_inp.value.strip(),
                                    desc_inp.value.strip(), float(low_inp.value or 5))
                 else:
-                    add_product(self.page.session.get("user_id"), name_inp.value.strip(),
+                    add_product(self.page.session.store.get("user_id"), name_inp.value.strip(),
                                 float(qty_inp.value or 0), float(price_inp.value or 0),
                                 cat_inp.value.strip(), pkg_inp.value.strip(), desc_inp.value.strip(),
                                 float(low_inp.value or 5))
@@ -173,7 +173,7 @@ class StockScreen(ft.Container):
         self.page.update()
 
     def _show_movement_dialog(self, product_id, mtype):
-        lang = self.page.session.get("lang") or "ar"
+        lang = self.page.session.store.get("lang") or "ar"
         qty_inp = ft.TextField(label=t(lang, "quantity"), value="0",
                                keyboard_type=ft.KeyboardType.NUMBER, text_align=ft.TextAlign.RIGHT)
         note_inp = ft.TextField(label=t(lang, "note"), text_align=ft.TextAlign.RIGHT)
@@ -188,7 +188,7 @@ class StockScreen(ft.Container):
                     if p and qty > p["quantity"]:
                         self.page.show_snack_bar(ft.SnackBar(ft.Text(t(lang, "quantity_more_than_stock"))))
                         return
-                add_stock_movement(product_id, self.page.session.get("user_id"), mtype, qty, note_inp.value.strip())
+                add_stock_movement(product_id, self.page.session.store.get("user_id"), mtype, qty, note_inp.value.strip())
                 dlg.open = False
                 self.page.update()
                 self._refresh()
@@ -208,8 +208,8 @@ class StockScreen(ft.Container):
         self.page.update()
 
     def _show_movement_history(self, product_id):
-        lang = self.page.session.get("lang") or "ar"
-        user_id = self.page.session.get("user_id")
+        lang = self.page.session.store.get("lang") or "ar"
+        user_id = self.page.session.store.get("user_id")
         all_movements = get_stock_movements(user_id, 200)
         p_movements = [m for m in all_movements if m["product_id"] == product_id]
 
@@ -254,6 +254,6 @@ class StockScreen(ft.Container):
         self.page.update()
 
     def _refresh(self):
-        self.products = get_products(self.page.session.get("user_id")) if self.page.session.get("user_id") else []
+        self.products = get_products(self.page.session.store.get("user_id")) if self.page.session.store.get("user_id") else []
         self._build()
         self.update()

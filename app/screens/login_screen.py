@@ -13,7 +13,7 @@ class LoginScreen(ft.Container):
         self._build()
 
     def _build(self):
-        lang = self.page.session.get("lang") or "ar"
+        lang = self.page.session.store.get("lang") or "ar"
         is_first_run = user_count() == 0
         self.show_login = not is_first_run
 
@@ -83,7 +83,7 @@ class LoginScreen(ft.Container):
         )
 
     def _handle_action(self, e):
-        lang = self.page.session.get("lang") or "ar"
+        lang = self.page.session.store.get("lang") or "ar"
         name = self.name_input.value.strip()
         email = self.email_input.value.strip()
         password = self.password_input.value.strip()
@@ -96,8 +96,8 @@ class LoginScreen(ft.Container):
         if self.show_login:
             user = authenticate_user(email, password)
             if user:
-                self.page.session.set("user_id", user["id"])
-                self.page.session.set("user_name", user["name"])
+                self.page.session.store.set("user_id", user["id"])
+                self.page.session.store.set("user_name", user["name"])
                 self.on_login_success()
             else:
                 self.error_text.value = t(lang, "wrong_credentials")
@@ -109,15 +109,15 @@ class LoginScreen(ft.Container):
                 return
             user_id = create_user(name, email, password)
             if user_id:
-                self.page.session.set("user_id", user_id)
-                self.page.session.set("user_name", name)
+                self.page.session.store.set("user_id", user_id)
+                self.page.session.store.set("user_name", name)
                 self.on_login_success()
             else:
                 self.error_text.value = t(lang, "email_exists")
                 self.update()
 
     def _toggle_mode(self, e):
-        lang = self.page.session.get("lang") or "ar"
+        lang = self.page.session.store.get("lang") or "ar"
         self.show_login = not self.show_login
         self.title_text.value = t(lang, "login" if self.show_login else "register")
         self.subtitle_text.value = t(lang, "login_subtitle" if self.show_login else "register_subtitle")

@@ -13,8 +13,8 @@ class CashScreen(ft.Container):
         self._build()
 
     def _build(self):
-        lang = self.page.session.get("lang") or "ar"
-        user_id = self.page.session.get("user_id")
+        lang = self.page.session.store.get("lang") or "ar"
+        user_id = self.page.session.store.get("user_id")
         self.transactions = get_transactions(user_id) if user_id else []
         data = get_dashboard_data(user_id) if user_id else {}
 
@@ -106,7 +106,7 @@ class CashScreen(ft.Container):
         )
 
     def _show_add_dialog(self, e):
-        lang = self.page.session.get("lang") or "ar"
+        lang = self.page.session.store.get("lang") or "ar"
         ttype_dd = ft.Dropdown(
             label=t(lang, "transaction_type"),
             options=[
@@ -126,7 +126,7 @@ class CashScreen(ft.Container):
                 amt = float(amt_inp.value or 0)
                 if amt <= 0:
                     return
-                add_transaction(self.page.session.get("user_id"), ttype_dd.value, amt,
+                add_transaction(self.page.session.store.get("user_id"), ttype_dd.value, amt,
                                 cat_inp.value.strip(), desc_inp.value.strip())
                 dlg.open = False
                 self.page.update()
@@ -151,6 +151,6 @@ class CashScreen(ft.Container):
         self.page.update()
 
     def _refresh(self):
-        self.transactions = get_transactions(self.page.session.get("user_id")) if self.page.session.get("user_id") else []
+        self.transactions = get_transactions(self.page.session.store.get("user_id")) if self.page.session.store.get("user_id") else []
         self._build()
         self.update()

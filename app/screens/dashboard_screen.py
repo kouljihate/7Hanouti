@@ -13,8 +13,8 @@ class DashboardScreen(ft.Container):
         self._build()
 
     def _build(self):
-        lang = self.page.session.get("lang") or "ar"
-        user_id = self.page.session.get("user_id")
+        lang = self.page.session.store.get("lang") or "ar"
+        user_id = self.page.session.store.get("user_id")
         data = get_dashboard_data(user_id) if user_id else {}
         movements = get_stock_movements(user_id, 5) if user_id else []
         transactions = get_transactions(user_id, 5) if user_id else []

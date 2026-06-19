@@ -12,25 +12,25 @@ def main(page: ft.Page):
     init_db()
 
     page.title = "7Hanouti"
-    page.theme_mode = page.session.get("theme_mode") or "dark"
+    page.theme_mode = page.session.store.get("theme_mode") or "dark"
     page.rtl = True
     page.window.width = 400
     page.window.height = 750
     page.padding = 20
 
-    if not page.session.get("lang"):
-        page.session.set("lang", "ar")
-    if not page.session.get("theme_mode"):
-        page.session.set("theme_mode", "dark")
+    if not page.session.store.get("lang"):
+        page.session.store.set("lang", "ar")
+    if not page.session.store.get("theme_mode"):
+        page.session.store.set("theme_mode", "dark")
 
     def navigate_to(screen_index):
         nav_bar.selected_index = screen_index
         _update_screen(screen_index)
 
     def _update_screen(index):
-        lang = page.session.get("lang") or "ar"
+        lang = page.session.store.get("lang") or "ar"
         page.views.clear()
-        user_id = page.session.get("user_id")
+        user_id = page.session.store.get("user_id")
 
         if not user_id:
             view = ft.View("/", [LoginScreen(page, on_login_success=lambda: navigate_to(0))])
@@ -69,8 +69,8 @@ def main(page: ft.Page):
         page.update()
 
     def _logout():
-        page.session.set("user_id", None)
-        page.session.set("user_name", None)
+        page.session.store.set("user_id", None)
+        page.session.store.set("user_name", None)
         page.views.clear()
         page.views.append(ft.View("/", [LoginScreen(page, on_login_success=lambda: navigate_to(0))]))
         page.update()
@@ -87,10 +87,10 @@ def main(page: ft.Page):
 
     nav_bar = ft.NavigationBar(
         destinations=[
-            ft.NavigationDestination(icon=ft.icons.DASHBOARD, label=t(page.session.get("lang") or "ar", "dashboard")),
-            ft.NavigationDestination(icon=ft.icons.INVENTORY, label=t(page.session.get("lang") or "ar", "stock")),
-            ft.NavigationDestination(icon=ft.icons.ACCOUNT_BALANCE, label=t(page.session.get("lang") or "ar", "cash")),
-            ft.NavigationDestination(icon=ft.icons.SETTINGS, label=t(page.session.get("lang") or "ar", "settings")),
+            ft.NavigationDestination(icon=ft.icons.DASHBOARD, label=t(page.session.store.get("lang") or "ar", "dashboard")),
+            ft.NavigationDestination(icon=ft.icons.INVENTORY, label=t(page.session.store.get("lang") or "ar", "stock")),
+            ft.NavigationDestination(icon=ft.icons.ACCOUNT_BALANCE, label=t(page.session.store.get("lang") or "ar", "cash")),
+            ft.NavigationDestination(icon=ft.icons.SETTINGS, label=t(page.session.store.get("lang") or "ar", "settings")),
         ],
         selected_index=0,
         on_change=_nav_change,
@@ -100,4 +100,4 @@ def main(page: ft.Page):
 
 
 if __name__ == "__main__":
-    ft.app(target=main)
+    ft.run(main)

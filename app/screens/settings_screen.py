@@ -16,7 +16,7 @@ class SettingsScreen(ft.Container):
         self._build()
 
     def _build(self):
-        lang = self.page.session.get("lang") or "ar"
+        lang = self.page.session.store.get("lang") or "ar"
         is_dark = self.page.theme_mode == "dark" if hasattr(self.page, "theme_mode") else False
         surface = AppTheme.SURFACE_DARK if is_dark else AppTheme.SURFACE_LIGHT
 
@@ -106,7 +106,7 @@ class SettingsScreen(ft.Container):
         selected = e.data
         new_mode = "dark" if "dark" in selected else "light"
         self.page.theme_mode = new_mode
-        self.page.session.set("theme_mode", new_mode)
+        self.page.session.store.set("theme_mode", new_mode)
         self.page.update()
         if self.on_theme_change:
             self.on_theme_change(new_mode)
@@ -119,7 +119,7 @@ class SettingsScreen(ft.Container):
             lang = "fr"
         elif "en" in selected:
             lang = "en"
-        self.page.session.set("lang", lang)
+        self.page.session.store.set("lang", lang)
         if self.on_lang_change:
             self.on_lang_change(lang)
         self._rebuild()
