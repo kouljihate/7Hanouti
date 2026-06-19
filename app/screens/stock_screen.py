@@ -186,7 +186,7 @@ class StockScreen(ft.Container):
                 if mtype == "out":
                     p = get_product(product_id)
                     if p and qty > p["quantity"]:
-                        self.page.show_snack_bar(ft.SnackBar(ft.Text(t(lang, "quantity_more_than_stock"))))
+                        self.page.show_dialog(ft.SnackBar(ft.Text(t(lang, "quantity_more_than_stock"))))
                         return
                 add_stock_movement(product_id, self.page.session.store.get("user_id"), mtype, qty, note_inp.value.strip())
                 dlg.open = False

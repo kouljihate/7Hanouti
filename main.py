@@ -87,10 +87,10 @@ def main(page: ft.Page):
 
     nav_bar = ft.NavigationBar(
         destinations=[
-            ft.NavigationDestination(icon=ft.icons.DASHBOARD, label=t(page.session.store.get("lang") or "ar", "dashboard")),
-            ft.NavigationDestination(icon=ft.icons.INVENTORY, label=t(page.session.store.get("lang") or "ar", "stock")),
-            ft.NavigationDestination(icon=ft.icons.ACCOUNT_BALANCE, label=t(page.session.store.get("lang") or "ar", "cash")),
-            ft.NavigationDestination(icon=ft.icons.SETTINGS, label=t(page.session.store.get("lang") or "ar", "settings")),
+            ft.NavigationBarDestination(icon=ft.icons.DASHBOARD, label=t(page.session.store.get("lang") or "ar", "dashboard")),
+            ft.NavigationBarDestination(icon=ft.icons.INVENTORY, label=t(page.session.store.get("lang") or "ar", "stock")),
+            ft.NavigationBarDestination(icon=ft.icons.ACCOUNT_BALANCE, label=t(page.session.store.get("lang") or "ar", "cash")),
+            ft.NavigationBarDestination(icon=ft.icons.SETTINGS, label=t(page.session.store.get("lang") or "ar", "settings")),
         ],
         selected_index=0,
         on_change=_nav_change,
