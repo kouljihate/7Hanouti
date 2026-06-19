@@ -22,13 +22,13 @@ class DashboardScreen(ft.Container):
         kpi_cards = ft.ResponsiveRow(
             [
                 self._kpi_card(t(lang, "total_stock_value"), f"{data.get('stock_value', 0):.2f} DA",
-                               ft.icons.INVENTORY, AppTheme.PRIMARY, col={"sm": 6, "md": 3}),
+                               ft.Icons.INVENTORY, AppTheme.PRIMARY, col={"sm": 6, "md": 3}),
                 self._kpi_card(t(lang, "cash_balance"), f"{data.get('cash_balance', 0):.2f} DA",
-                               ft.icons.ACCOUNT_BALANCE, AppTheme.SUCCESS, col={"sm": 6, "md": 3}),
+                               ft.Icons.ACCOUNT_BALANCE, AppTheme.SUCCESS, col={"sm": 6, "md": 3}),
                 self._kpi_card(t(lang, "total_products"), str(data.get("product_count", 0)),
-                               ft.icons.CATEGORY, AppTheme.ACCENT, col={"sm": 6, "md": 3}),
+                               ft.Icons.CATEGORY, AppTheme.ACCENT, col={"sm": 6, "md": 3}),
                 self._kpi_card(t(lang, "low_stock_alerts"), str(data.get("low_stock_count", 0)),
-                               ft.icons.WARNING_AMBER, AppTheme.LOW_STOCK, col={"sm": 6, "md": 3}),
+                               ft.Icons.WARNING_AMBER, AppTheme.LOW_STOCK, col={"sm": 6, "md": 3}),
             ],
             spacing=10,
         )

@@ -59,7 +59,7 @@ class CashScreen(ft.Container):
                     [
                         ft.Text(t(lang, "cash"), size=24, weight=ft.FontWeight.BOLD),
                         ft.FloatingActionButton(
-                            icon=ft.icons.ADD,
+                            icon=ft.Icons.ADD,
                             text=t(lang, "add_transaction"),
                             on_click=self._show_add_dialog,
                         ),

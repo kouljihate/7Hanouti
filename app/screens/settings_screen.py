@@ -34,9 +34,9 @@ class SettingsScreen(ft.Container):
                             ft.SegmentedButton(
                                 segments=[
                                     ft.Segment("light", label=ft.Text(t(lang, "light_mode")),
-                                               icon=ft.icons.LIGHT_MODE),
+                                               icon=ft.Icons.LIGHT_MODE),
                                     ft.Segment("dark", label=ft.Text(t(lang, "dark_mode")),
-                                               icon=ft.icons.DARK_MODE),
+                                               icon=ft.Icons.DARK_MODE),
                                 ],
                                 selected={"dark" if is_dark else "light"},
                                 on_change=self._on_theme_change,
@@ -57,11 +57,11 @@ class SettingsScreen(ft.Container):
                             ft.SegmentedButton(
                                 segments=[
                                     ft.Segment("ar", label=ft.Text(t(lang, "arabic")),
-                                               icon=ft.icons.TRANSLATE),
+                                               icon=ft.Icons.TRANSLATE),
                                     ft.Segment("fr", label=ft.Text(t(lang, "french")),
-                                               icon=ft.icons.TRANSLATE),
+                                               icon=ft.Icons.TRANSLATE),
                                     ft.Segment("en", label=ft.Text(t(lang, "english")),
-                                               icon=ft.icons.TRANSLATE),
+                                               icon=ft.Icons.TRANSLATE),
                                 ],
                                 selected={lang},
                                 on_change=self._on_lang_change,
@@ -78,7 +78,7 @@ class SettingsScreen(ft.Container):
                     content=ft.Column(
                         [
                             ft.ListTile(
-                                leading=ft.Icon(ft.icons.INFO),
+                                leading=ft.Icon(ft.Icons.INFO),
                                 title=ft.Text(f"{t(lang, 'version')}: {VERSION}"),
                                 subtitle=ft.Text(f"{t(lang, 'build_date')}: {BUILD_DATE}"),
                             ),
@@ -93,7 +93,7 @@ class SettingsScreen(ft.Container):
                 ft.Container(height=20),
                 ft.FilledButton(
                     t(lang, "logout"),
-                    icon=ft.icons.LOGOUT,
+                    icon=ft.Icons.LOGOUT,
                     width=320,
                     height=48,
                     on_click=lambda e: self.on_logout(),

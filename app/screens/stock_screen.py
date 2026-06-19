@@ -22,7 +22,7 @@ class StockScreen(ft.Container):
                     [
                         ft.Text(t(lang, "products"), size=24, weight=ft.FontWeight.BOLD),
                         ft.FloatingActionButton(
-                            icon=ft.icons.ADD,
+                            icon=ft.Icons.ADD,
                             text=t(lang, "add_product"),
                             on_click=self._show_add_dialog,
                         ),
@@ -49,8 +49,8 @@ class StockScreen(ft.Container):
                                 ft.Row(
                                     [
                                         ft.Text(p["name"], size=16, weight=ft.FontWeight.BOLD, expand=True),
-                                        ft.IconButton(ft.icons.EDIT, on_click=lambda e, pid=p["id"]: self._show_edit_dialog(pid)),
-                                        ft.IconButton(ft.icons.DELETE, on_click=lambda e, pid=p["id"]: self._confirm_delete(pid)),
+                                        ft.IconButton(ft.Icons.EDIT, on_click=lambda e, pid=p["id"]: self._show_edit_dialog(pid)),
+                                        ft.IconButton(ft.Icons.DELETE, on_click=lambda e, pid=p["id"]: self._confirm_delete(pid)),
                                     ]
                                 ),
                                 ft.Row(
@@ -65,24 +65,24 @@ class StockScreen(ft.Container):
                                     [
                                         ft.FilledTonalButton(
                                             t(lang, "stock_in"),
-                                            icon=ft.icons.ADD_CIRCLE,
+                                            icon=ft.Icons.ADD_CIRCLE,
                                             on_click=lambda e, pid=p["id"]: self._show_movement_dialog(pid, "in"),
                                         ),
                                         ft.FilledTonalButton(
                                             t(lang, "stock_out"),
-                                            icon=ft.icons.REMOVE_CIRCLE,
+                                            icon=ft.Icons.REMOVE_CIRCLE,
                                             on_click=lambda e, pid=p["id"]: self._show_movement_dialog(pid, "out"),
                                         ),
                                         ft.FilledTonalButton(
                                             t(lang, "movement_history"),
-                                            icon=ft.icons.HISTORY,
+                                            icon=ft.Icons.HISTORY,
                                             on_click=lambda e, pid=p["id"]: self._show_movement_history(pid),
                                         ),
                                     ],
                                     spacing=5,
                                 ),
                                 ft.Row(
-                                    [ft.Icon(ft.icons.WARNING, color=AppTheme.LOW_STOCK, size=16),
+                                    [ft.Icon(ft.Icons.WARNING, color=AppTheme.LOW_STOCK, size=16),
                                      ft.Text(t(lang, "low_stock_alerts"), size=12, color=AppTheme.LOW_STOCK)]
                                 ) if is_low else ft.Container(),
                             ],

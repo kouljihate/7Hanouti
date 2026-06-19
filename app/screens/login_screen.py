@@ -19,14 +19,14 @@ class LoginScreen(ft.Container):
 
         self.email_input = ft.TextField(
             label=t(lang, "email"),
-            prefix_icon=ft.icons.EMAIL,
+            prefix_icon=ft.Icons.EMAIL,
             keyboard_type=ft.KeyboardType.EMAIL,
             width=320,
             text_align=ft.TextAlign.RIGHT,
         )
         self.password_input = ft.TextField(
             label=t(lang, "password"),
-            prefix_icon=ft.icons.LOCK,
+            prefix_icon=ft.Icons.LOCK,
             password=True,
             can_reveal_password=True,
             width=320,
@@ -34,7 +34,7 @@ class LoginScreen(ft.Container):
         )
         self.name_input = ft.TextField(
             label=t(lang, "name"),
-            prefix_icon=ft.icons.PERSON,
+            prefix_icon=ft.Icons.PERSON,
             width=320,
             visible=is_first_run,
             text_align=ft.TextAlign.RIGHT,
@@ -65,7 +65,7 @@ class LoginScreen(ft.Container):
         self.content = ft.Column(
             [
                 ft.Container(height=60),
-                ft.Icon(ft.icons.STORE, size=64, color=ft.Colors.TEAL),
+                ft.Icon(ft.Icons.STORE, size=64, color=ft.Colors.TEAL),
                 ft.Container(height=10),
                 self.title_text,
                 self.subtitle_text,

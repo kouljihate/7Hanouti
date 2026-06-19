@@ -47,7 +47,7 @@ def main(page: ft.Page):
         ]
 
         titles = [t(lang, "dashboard"), t(lang, "stock"), t(lang, "cash"), t(lang, "settings")]
-        icons = [ft.icons.DASHBOARD, ft.icons.INVENTORY, ft.icons.ACCOUNT_BALANCE, ft.icons.SETTINGS]
+        icons = [ft.Icons.DASHBOARD, ft.Icons.INVENTORY, ft.Icons.ACCOUNT_BALANCE, ft.Icons.SETTINGS]
 
         content = screens[index] if index < len(screens) else screens[0]
         view = ft.View(
@@ -87,10 +87,10 @@ def main(page: ft.Page):
 
     nav_bar = ft.NavigationBar(
         destinations=[
-            ft.NavigationBarDestination(icon=ft.icons.DASHBOARD, label=t(page.session.store.get("lang") or "ar", "dashboard")),
-            ft.NavigationBarDestination(icon=ft.icons.INVENTORY, label=t(page.session.store.get("lang") or "ar", "stock")),
-            ft.NavigationBarDestination(icon=ft.icons.ACCOUNT_BALANCE, label=t(page.session.store.get("lang") or "ar", "cash")),
-            ft.NavigationBarDestination(icon=ft.icons.SETTINGS, label=t(page.session.store.get("lang") or "ar", "settings")),
+            ft.NavigationBarDestination(icon=ft.Icons.DASHBOARD, label=t(page.session.store.get("lang") or "ar", "dashboard")),
+            ft.NavigationBarDestination(icon=ft.Icons.INVENTORY, label=t(page.session.store.get("lang") or "ar", "stock")),
+            ft.NavigationBarDestination(icon=ft.Icons.ACCOUNT_BALANCE, label=t(page.session.store.get("lang") or "ar", "cash")),
+            ft.NavigationBarDestination(icon=ft.Icons.SETTINGS, label=t(page.session.store.get("lang") or "ar", "settings")),
         ],
         selected_index=0,
         on_change=_nav_change,
