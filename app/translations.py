@@ -91,6 +91,14 @@ AR = {
     "quantity_more_than_stock": "الكمية المطلوبة أكبر من المخزون المتاح",
     "settings_subtitle": "تخصيص إعدادات التطبيق",
     "cash_overview": "نظرة عامة على الخزينة",
+    "currency": "العملة",
+    "sell": "بيع",
+    "sell_qty": "كمية البيع",
+    "supplier_name": "اسم المورد",
+    "supplier_whatsapp": "واتساب المورد",
+    "supplier_email": "البريد الإلكتروني للمورد",
+    "buying_price": "سعر الشراء",
+    "potential_profit": "الأرباح المتوقعة",
 }
 
 FR = {
@@ -186,6 +194,14 @@ FR = {
     "quantity_more_than_stock": "La quantité demandée dépasse le stock disponible",
     "settings_subtitle": "Personnaliser les paramètres",
     "cash_overview": "Aperçu de la caisse",
+    "currency": "Devise",
+    "sell": "Vendre",
+    "sell_qty": "Quantité à vendre",
+    "supplier_name": "Nom du fournisseur",
+    "supplier_whatsapp": "Whatsapp du fournisseur",
+    "supplier_email": "E-mail du fournisseur",
+    "buying_price": "Prix d'achat",
+    "potential_profit": "Bénéfice potentiel",
 }
 
 EN = {
@@ -281,6 +297,14 @@ EN = {
     "quantity_more_than_stock": "Requested quantity exceeds available stock",
     "settings_subtitle": "Customize app settings",
     "cash_overview": "Cash Overview",
+    "currency": "Currency",
+    "sell": "Sell",
+    "sell_qty": "Sell Quantity",
+    "supplier_name": "Supplier Name",
+    "supplier_whatsapp": "Supplier WhatsApp",
+    "supplier_email": "Supplier Email",
+    "buying_price": "Buying Price",
+    "potential_profit": "Potential Profit",
 }
 
 

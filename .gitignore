@@ -6,3 +6,4 @@ data/app.db
 *.db
 .DS_Store
 Thumbs.db
+build/

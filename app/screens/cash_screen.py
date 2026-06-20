@@ -2,43 +2,44 @@ import flet as ft
 from app.database import get_transactions, add_transaction, get_dashboard_data
 from app.translations import get_translation as t
 from app.theme import AppTheme
+from app.currency import get_currency_symbol
 
 
 class CashScreen(ft.Container):
     def __init__(self, page: ft.Page):
         super().__init__()
-        self.page = page
+        self._page = page
         self.expand = True
         self.bgcolor = page.theme.bgcolor if hasattr(page.theme, "bgcolor") else None
         self._build()
 
     def _build(self):
-        lang = self.page.session.store.get("lang") or "ar"
-        user_id = self.page.session.store.get("user_id")
+        lang = self._page.session.store.get("lang") or "ar"
+        user_id = self._page.session.store.get("user_id")
         self.transactions = get_transactions(user_id) if user_id else []
         data = get_dashboard_data(user_id) if user_id else {}
 
-        is_dark = self.page.theme_mode == "dark" if hasattr(self.page, "theme_mode") else True
+        is_dark = self._page.theme_mode == "dark" if hasattr(self._page, "theme_mode") else True
         surface = AppTheme.SURFACE_DARK if is_dark else AppTheme.SURFACE_LIGHT
 
         balance_card = ft.Container(
             content=ft.Column(
                 [
                     ft.Text(t(lang, "balance"), size=14, opacity=0.7),
-                    ft.Text(f"{data.get('cash_balance', 0):.2f} DA", size=32, weight=ft.FontWeight.BOLD,
+                    ft.Text(f"{data.get('cash_balance', 0):.2f} {get_currency_symbol(self._page)}", size=32, weight=ft.FontWeight.BOLD,
                             color=AppTheme.SUCCESS if data.get('cash_balance', 0) >= 0 else AppTheme.ERROR),
                     ft.Container(height=10),
                     ft.Row(
                         [
                             ft.Column([
                                 ft.Text(t(lang, "total_income"), size=12, opacity=0.7),
-                                ft.Text(f"{data.get('cash_income', 0):.2f} DA",
+                                ft.Text(f"{data.get('cash_income', 0):.2f} {get_currency_symbol(self._page)}",
                                         color=AppTheme.SUCCESS, size=16, weight=ft.FontWeight.BOLD),
                             ]),
                             ft.VerticalDivider(),
                             ft.Column([
                                 ft.Text(t(lang, "total_expenses"), size=12, opacity=0.7),
-                                ft.Text(f"{data.get('cash_expense', 0):.2f} DA",
+                                ft.Text(f"{data.get('cash_expense', 0):.2f} {get_currency_symbol(self._page)}",
                                         color=AppTheme.ERROR, size=16, weight=ft.FontWeight.BOLD),
                             ]),
                         ],
@@ -50,7 +51,7 @@ class CashScreen(ft.Container):
             bgcolor=surface,
             border_radius=12,
             padding=20,
-            margin=ft.margin.symmetric(vertical=10),
+            margin=ft.Margin(left=0, top=10, right=0, bottom=10),
         )
 
         self.content = ft.Column(
@@ -60,7 +61,6 @@ class CashScreen(ft.Container):
                         ft.Text(t(lang, "cash"), size=24, weight=ft.FontWeight.BOLD),
                         ft.FloatingActionButton(
                             icon=ft.Icons.ADD,
-                            text=t(lang, "add_transaction"),
                             on_click=self._show_add_dialog,
                         ),
                     ],
@@ -106,7 +106,7 @@ class CashScreen(ft.Container):
         )
 
     def _show_add_dialog(self, e):
-        lang = self.page.session.store.get("lang") or "ar"
+        lang = self._page.session.store.get("lang") or "ar"
         ttype_dd = ft.Dropdown(
             label=t(lang, "transaction_type"),
             options=[
@@ -114,43 +114,36 @@ class CashScreen(ft.Container):
                 ft.dropdown.Option("expense", t(lang, "expense")),
             ],
             value="income",
-            width=320,
+            expand=True,
         )
         amt_inp = ft.TextField(label=t(lang, "amount"), value="0",
-                                keyboard_type=ft.KeyboardType.NUMBER, text_align=ft.TextAlign.RIGHT)
-        cat_inp = ft.TextField(label=t(lang, "category"), text_align=ft.TextAlign.RIGHT)
-        desc_inp = ft.TextField(label=t(lang, "description"), multiline=True, text_align=ft.TextAlign.RIGHT)
+                                keyboard_type=ft.KeyboardType.NUMBER, text_align=ft.TextAlign.RIGHT, expand=True)
+        cat_inp = ft.TextField(label=t(lang, "category"), text_align=ft.TextAlign.RIGHT, expand=True)
+        desc_inp = ft.TextField(label=t(lang, "description"), multiline=True, text_align=ft.TextAlign.RIGHT, expand=True)
 
         def save(e):
             try:
                 amt = float(amt_inp.value or 0)
                 if amt <= 0:
                     return
-                add_transaction(self.page.session.store.get("user_id"), ttype_dd.value, amt,
+                add_transaction(self._page.session.store.get("user_id"), ttype_dd.value, amt,
                                 cat_inp.value.strip(), desc_inp.value.strip())
-                dlg.open = False
-                self.page.update()
+                self._page.pop_dialog()
                 self._refresh()
             except ValueError:
                 pass
 
         dlg = ft.AlertDialog(
             title=ft.Text(t(lang, "add_transaction")),
-            content=ft.Column([ttype_dd, amt_inp, cat_inp, desc_inp], width=320, height=300, scroll=ft.ScrollMode.AUTO),
+            content=ft.Column([ttype_dd, amt_inp, cat_inp, desc_inp], scroll=ft.ScrollMode.AUTO),
             actions=[
-                ft.TextButton(t(lang, "cancel"), on_click=lambda e: self._close_dialog(dlg)),
+                ft.TextButton(t(lang, "cancel"), on_click=lambda e: self._page.pop_dialog()),
                 ft.FilledButton(t(lang, "save"), on_click=save),
             ],
         )
-        self.page.dialog = dlg
-        dlg.open = True
-        self.page.update()
-
-    def _close_dialog(self, dlg):
-        dlg.open = False
-        self.page.update()
+        self._page.show_dialog(dlg)
 
     def _refresh(self):
-        self.transactions = get_transactions(self.page.session.store.get("user_id")) if self.page.session.store.get("user_id") else []
+        self.transactions = get_transactions(self._page.session.store.get("user_id")) if self._page.session.store.get("user_id") else []
         self._build()
         self.update()

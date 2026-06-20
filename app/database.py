@@ -15,11 +15,27 @@ def _get_connection():
     return conn
 
 
+def _migrate_schema():
+    conn = _get_connection()
+    for col in ["supplier_name", "supplier_whatsapp", "supplier_email"]:
+        try:
+            conn.execute(f"ALTER TABLE products ADD COLUMN {col} TEXT DEFAULT ''")
+        except sqlite3.OperationalError:
+            pass
+    try:
+        conn.execute("ALTER TABLE products ADD COLUMN buying_price REAL DEFAULT 0")
+    except sqlite3.OperationalError:
+        pass
+    conn.commit()
+    conn.close()
+
+
 def hash_password(password: str) -> str:
     return hashlib.sha256(password.encode("utf-8")).hexdigest()
 
 
 def init_db():
+    _migrate_schema()
     conn = _get_connection()
     cursor = conn.cursor()
     cursor.executescript("""
@@ -112,26 +128,32 @@ def get_user(user_id: int):
     return dict(row) if row else None
 
 
-def add_product(user_id: int, name: str, quantity: float, price: float,
-                category: str, packaging: str, description: str, low_stock_qty: float) -> int:
+def add_product(user_id: int, name: str, quantity: float, price: float, buying_price: float,
+                category: str, packaging: str, description: str, low_stock_qty: float,
+                supplier_name: str = "", supplier_whatsapp: str = "", supplier_email: str = "") -> int:
     conn = _get_connection()
     cursor = conn.execute(
-        """INSERT INTO products (user_id, name, quantity, price, category, packaging,
-           description, low_stock_qty) VALUES (?,?,?,?,?,?,?,?)""",
-        (user_id, name, quantity, price, category, packaging, description, low_stock_qty),
+        """INSERT INTO products (user_id, name, quantity, price, buying_price, category, packaging,
+           description, low_stock_qty, supplier_name, supplier_whatsapp, supplier_email)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
+        (user_id, name, quantity, price, buying_price, category, packaging,
+         description, low_stock_qty, supplier_name, supplier_whatsapp, supplier_email),
     )
     conn.commit()
     conn.close()
     return cursor.lastrowid
 
 
-def update_product(product_id: int, name: str, quantity: float, price: float,
-                   category: str, packaging: str, description: str, low_stock_qty: float):
+def update_product(product_id: int, name: str, quantity: float, price: float, buying_price: float,
+                   category: str, packaging: str, description: str, low_stock_qty: float,
+                   supplier_name: str = "", supplier_whatsapp: str = "", supplier_email: str = ""):
     conn = _get_connection()
     conn.execute(
-        """UPDATE products SET name=?, quantity=?, price=?, category=?, packaging=?,
-           description=?, low_stock_qty=?, updated_at=datetime('now') WHERE id=?""",
-        (name, quantity, price, category, packaging, description, low_stock_qty, product_id),
+        """UPDATE products SET name=?, quantity=?, price=?, buying_price=?, category=?, packaging=?,
+           description=?, low_stock_qty=?, supplier_name=?, supplier_whatsapp=?, supplier_email=?,
+           updated_at=datetime('now') WHERE id=?""",
+        (name, quantity, price, buying_price, category, packaging, description,
+         low_stock_qty, supplier_name, supplier_whatsapp, supplier_email, product_id),
     )
     conn.commit()
     conn.close()
@@ -212,6 +234,10 @@ def get_dashboard_data(user_id: int):
         "SELECT COALESCE(SUM(quantity * price), 0) as val FROM products WHERE user_id = ?",
         (user_id,),
     ).fetchone()["val"]
+    buying_cost = conn.execute(
+        "SELECT COALESCE(SUM(quantity * buying_price), 0) as val FROM products WHERE user_id = ?",
+        (user_id,),
+    ).fetchone()["val"]
     cash_income = conn.execute(
         "SELECT COALESCE(SUM(amount), 0) as tot FROM transactions WHERE user_id = ? AND type='income'",
         (user_id,),
@@ -231,6 +257,8 @@ def get_dashboard_data(user_id: int):
     conn.close()
     return {
         "stock_value": stock_value,
+        "buying_cost": buying_cost,
+        "potential_profit": stock_value - buying_cost,
         "cash_balance": cash_balance,
         "low_stock_count": low_stock,
         "product_count": product_count,

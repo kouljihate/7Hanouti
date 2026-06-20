@@ -14,14 +14,17 @@ def main(page: ft.Page):
     page.title = "7Hanouti"
     page.theme_mode = page.session.store.get("theme_mode") or "dark"
     page.rtl = True
-    page.window.width = 400
-    page.window.height = 750
-    page.padding = 20
+    page.window.width = 360
+    page.window.height = 780
+    page.window.resizable = True
+    page.padding = 10
 
     if not page.session.store.get("lang"):
         page.session.store.set("lang", "ar")
     if not page.session.store.get("theme_mode"):
         page.session.store.set("theme_mode", "dark")
+    if not page.session.store.get("currency"):
+        page.session.store.set("currency", "MAD")
 
     def navigate_to(screen_index):
         nav_bar.selected_index = screen_index
@@ -33,7 +36,7 @@ def main(page: ft.Page):
         user_id = page.session.store.get("user_id")
 
         if not user_id:
-            view = ft.View("/", [LoginScreen(page, on_login_success=lambda: navigate_to(0))])
+            view = ft.View(route="/", controls=[LoginScreen(page, on_login_success=lambda: navigate_to(0))], padding=10)
             page.views.append(view)
             page.update()
             return
@@ -43,7 +46,8 @@ def main(page: ft.Page):
             StockScreen(page),
             CashScreen(page),
             SettingsScreen(page, on_logout=_logout, on_theme_change=_on_theme_change,
-                            on_lang_change=_on_lang_change),
+                            on_lang_change=_on_lang_change,
+                            on_currency_change=lambda: _update_screen(nav_bar.selected_index)),
         ]
 
         titles = [t(lang, "dashboard"), t(lang, "stock"), t(lang, "cash"), t(lang, "settings")]
@@ -51,15 +55,14 @@ def main(page: ft.Page):
 
         content = screens[index] if index < len(screens) else screens[0]
         view = ft.View(
-            "/",
-            [
+            route="/",
+            controls=[
                 ft.Container(content=content, expand=True),
-                ft.Container(height=60),
             ],
             bottom_appbar=ft.BottomAppBar(
                 content=ft.Container(
                     content=nav_bar,
-                    padding=ft.padding.symmetric(horizontal=10),
+                    padding=ft.Padding(left=10, top=0, right=10, bottom=0),
                 ),
                 height=70,
             ),
@@ -72,7 +75,7 @@ def main(page: ft.Page):
         page.session.store.set("user_id", None)
         page.session.store.set("user_name", None)
         page.views.clear()
-        page.views.append(ft.View("/", [LoginScreen(page, on_login_success=lambda: navigate_to(0))]))
+        page.views.append(ft.View(route="/", controls=[LoginScreen(page, on_login_success=lambda: navigate_to(0))]))
         page.update()
 
     def _on_theme_change(mode):

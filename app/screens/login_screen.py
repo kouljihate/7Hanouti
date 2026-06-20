@@ -1,19 +1,20 @@
 import flet as ft
 from app.database import user_count, create_user, authenticate_user
 from app.translations import get_translation as t
+from app.version import VERSION
 
 
 class LoginScreen(ft.Container):
     def __init__(self, page: ft.Page, on_login_success):
         super().__init__()
-        self.page = page
+        self._page = page
         self.on_login_success = on_login_success
         self.expand = True
         self.bgcolor = page.theme.bgcolor if hasattr(page.theme, "bgcolor") else None
         self._build()
 
     def _build(self):
-        lang = self.page.session.store.get("lang") or "ar"
+        lang = self._page.session.store.get("lang") or "ar"
         is_first_run = user_count() == 0
         self.show_login = not is_first_run
 
@@ -21,7 +22,7 @@ class LoginScreen(ft.Container):
             label=t(lang, "email"),
             prefix_icon=ft.Icons.EMAIL,
             keyboard_type=ft.KeyboardType.EMAIL,
-            width=320,
+            expand=True,
             text_align=ft.TextAlign.RIGHT,
         )
         self.password_input = ft.TextField(
@@ -29,13 +30,13 @@ class LoginScreen(ft.Container):
             prefix_icon=ft.Icons.LOCK,
             password=True,
             can_reveal_password=True,
-            width=320,
+            expand=True,
             text_align=ft.TextAlign.RIGHT,
         )
         self.name_input = ft.TextField(
             label=t(lang, "name"),
             prefix_icon=ft.Icons.PERSON,
-            width=320,
+            expand=True,
             visible=is_first_run,
             text_align=ft.TextAlign.RIGHT,
         )
@@ -52,38 +53,48 @@ class LoginScreen(ft.Container):
             text_align=ft.TextAlign.CENTER,
         )
         self.action_btn = ft.FilledButton(
-            text=t(lang, "register_btn" if is_first_run else "login_btn"),
-            width=320,
+            t(lang, "register_btn" if is_first_run else "login_btn"),
+            expand=True,
             height=48,
             on_click=self._handle_action,
         )
         self.toggle_text = ft.TextButton(
-            text=t(lang, "has_account" if is_first_run else "no_account"),
+            t(lang, "has_account" if is_first_run else "no_account"),
             on_click=self._toggle_mode,
         )
 
-        self.content = ft.Column(
+        self.content = ft.Stack(
             [
-                ft.Container(height=60),
-                ft.Icon(ft.Icons.STORE, size=64, color=ft.Colors.TEAL),
-                ft.Container(height=10),
-                self.title_text,
-                self.subtitle_text,
-                ft.Container(height=20),
-                self.name_input,
-                self.email_input,
-                self.password_input,
-                self.error_text,
-                ft.Container(height=10),
-                self.action_btn,
-                self.toggle_text,
+                ft.Column(
+                    [
+                        ft.Container(height=60),
+                        ft.Icon(ft.Icons.STORE, size=64, color=ft.Colors.TEAL),
+                        ft.Container(height=10),
+                        self.title_text,
+                        self.subtitle_text,
+                        ft.Container(height=20),
+                        self.name_input,
+                        self.email_input,
+                        self.password_input,
+                        self.error_text,
+                        ft.Container(height=10),
+                        self.action_btn,
+                        self.toggle_text,
+                    ],
+                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                    scroll=ft.ScrollMode.AUTO,
+                ),
+                ft.Container(
+                    ft.Text(f"v{VERSION}", size=11, opacity=0.5),
+                    alignment=ft.alignment.bottom_right,
+                    padding=ft.padding.only(right=10, bottom=5),
+                ),
             ],
-            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-            scroll=ft.ScrollMode.AUTO,
+            expand=True,
         )
 
     def _handle_action(self, e):
-        lang = self.page.session.store.get("lang") or "ar"
+        lang = self._page.session.store.get("lang") or "ar"
         name = self.name_input.value.strip()
         email = self.email_input.value.strip()
         password = self.password_input.value.strip()
@@ -96,8 +107,8 @@ class LoginScreen(ft.Container):
         if self.show_login:
             user = authenticate_user(email, password)
             if user:
-                self.page.session.store.set("user_id", user["id"])
-                self.page.session.store.set("user_name", user["name"])
+                self._page.session.store.set("user_id", user["id"])
+                self._page.session.store.set("user_name", user["name"])
                 self.on_login_success()
             else:
                 self.error_text.value = t(lang, "wrong_credentials")
@@ -109,15 +120,15 @@ class LoginScreen(ft.Container):
                 return
             user_id = create_user(name, email, password)
             if user_id:
-                self.page.session.store.set("user_id", user_id)
-                self.page.session.store.set("user_name", name)
+                self._page.session.store.set("user_id", user_id)
+                self._page.session.store.set("user_name", name)
                 self.on_login_success()
             else:
                 self.error_text.value = t(lang, "email_exists")
                 self.update()
 
     def _toggle_mode(self, e):
-        lang = self.page.session.store.get("lang") or "ar"
+        lang = self._page.session.store.get("lang") or "ar"
         self.show_login = not self.show_login
         self.title_text.value = t(lang, "login" if self.show_login else "register")
         self.subtitle_text.value = t(lang, "login_subtitle" if self.show_login else "register_subtitle")

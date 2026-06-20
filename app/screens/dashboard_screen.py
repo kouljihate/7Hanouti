@@ -2,31 +2,34 @@ import flet as ft
 from app.database import get_dashboard_data, get_stock_movements, get_transactions
 from app.translations import get_translation as t
 from app.theme import AppTheme
+from app.currency import get_currency_symbol
 
 
 class DashboardScreen(ft.Container):
     def __init__(self, page: ft.Page):
         super().__init__()
-        self.page = page
+        self._page = page
         self.expand = True
         self.bgcolor = page.theme.bgcolor if hasattr(page.theme, "bgcolor") else None
         self._build()
 
     def _build(self):
-        lang = self.page.session.store.get("lang") or "ar"
-        user_id = self.page.session.store.get("user_id")
+        lang = self._page.session.store.get("lang") or "ar"
+        user_id = self._page.session.store.get("user_id")
         data = get_dashboard_data(user_id) if user_id else {}
         movements = get_stock_movements(user_id, 5) if user_id else []
         transactions = get_transactions(user_id, 5) if user_id else []
 
         kpi_cards = ft.ResponsiveRow(
             [
-                self._kpi_card(t(lang, "total_stock_value"), f"{data.get('stock_value', 0):.2f} DA",
+                self._kpi_card(t(lang, "total_stock_value"), f"{data.get('stock_value', 0):.2f} {get_currency_symbol(self._page)}",
                                ft.Icons.INVENTORY, AppTheme.PRIMARY, col={"sm": 6, "md": 3}),
-                self._kpi_card(t(lang, "cash_balance"), f"{data.get('cash_balance', 0):.2f} DA",
-                               ft.Icons.ACCOUNT_BALANCE, AppTheme.SUCCESS, col={"sm": 6, "md": 3}),
+                self._kpi_card(t(lang, "potential_profit"), f"{data.get('potential_profit', 0):.2f} {get_currency_symbol(self._page)}",
+                               ft.Icons.TRENDING_UP, AppTheme.SUCCESS, col={"sm": 6, "md": 3}),
+                self._kpi_card(t(lang, "cash_balance"), f"{data.get('cash_balance', 0):.2f} {get_currency_symbol(self._page)}",
+                               ft.Icons.ACCOUNT_BALANCE, AppTheme.ACCENT, col={"sm": 6, "md": 3}),
                 self._kpi_card(t(lang, "total_products"), str(data.get("product_count", 0)),
-                               ft.Icons.CATEGORY, AppTheme.ACCENT, col={"sm": 6, "md": 3}),
+                               ft.Icons.CATEGORY, AppTheme.PRIMARY, col={"sm": 6, "md": 3}),
                 self._kpi_card(t(lang, "low_stock_alerts"), str(data.get("low_stock_count", 0)),
                                ft.Icons.WARNING_AMBER, AppTheme.LOW_STOCK, col={"sm": 6, "md": 3}),
             ],
@@ -51,7 +54,7 @@ class DashboardScreen(ft.Container):
         )
 
     def _kpi_card(self, title, value, icon, color, **kwargs):
-        is_dark = self.page.theme_mode == "dark" if hasattr(self.page, "theme_mode") else True
+        is_dark = self._page.theme_mode == "dark" if hasattr(self._page, "theme_mode") else True
         surface = AppTheme.SURFACE_DARK if is_dark else AppTheme.SURFACE_LIGHT
         return ft.Container(
             content=ft.Column(
