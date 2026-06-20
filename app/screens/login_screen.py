@@ -84,11 +84,7 @@ class LoginScreen(ft.Container):
                     horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                     scroll=ft.ScrollMode.AUTO,
                 ),
-                ft.Container(
-                    ft.Text(f"v{VERSION}", size=11, opacity=0.5),
-                    alignment=ft.alignment.bottom_right,
-                    padding=ft.padding.only(right=10, bottom=5),
-                ),
+                ft.Text(f"v{VERSION}", size=11, opacity=0.5, right=10, bottom=5),
             ],
             expand=True,
         )

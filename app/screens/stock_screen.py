@@ -90,8 +90,7 @@ class StockScreen(ft.Container):
                                 ) if p.get('buying_price', 0) > 0 else ft.Container(),
                                 ft.Row(
                                     [
-                                        ft.FilledTonalButton(
-                                            t(lang, "sell"),
+                                        ft.IconButton(
                                             icon=ft.Icons.PAYMENT,
                                             expand=True,
                                             on_click=lambda e, pid=p["id"]: self._show_sell_dialog(pid),
@@ -101,24 +100,21 @@ class StockScreen(ft.Container):
                                 ),
                                 ft.Row(
                                     [
-                                        ft.FilledTonalButton(
-                                            t(lang, "stock_in"),
-                                            icon=ft.Icons.ADD_CIRCLE,
-                                            expand=True,
-                                            on_click=lambda e, pid=p["id"]: self._show_movement_dialog(pid, "in"),
-                                        ),
-                                        ft.FilledTonalButton(
-                                            t(lang, "stock_out"),
-                                            icon=ft.Icons.REMOVE_CIRCLE,
-                                            expand=True,
-                                            on_click=lambda e, pid=p["id"]: self._show_movement_dialog(pid, "out"),
-                                        ),
-                                        ft.FilledTonalButton(
-                                            t(lang, "movement_history"),
-                                            icon=ft.Icons.HISTORY,
-                                            expand=True,
-                                            on_click=lambda e, pid=p["id"]: self._show_movement_history(pid),
-                                        ),
+                                ft.IconButton(
+                                    icon=ft.Icons.ADD_CIRCLE,
+                                    expand=True,
+                                    on_click=lambda e, pid=p["id"]: self._show_movement_dialog(pid, "in"),
+                                ),
+                                ft.IconButton(
+                                    icon=ft.Icons.REMOVE_CIRCLE,
+                                    expand=True,
+                                    on_click=lambda e, pid=p["id"]: self._show_movement_dialog(pid, "out"),
+                                ),
+                                ft.IconButton(
+                                    icon=ft.Icons.HISTORY,
+                                    expand=True,
+                                    on_click=lambda e, pid=p["id"]: self._show_movement_history(pid),
+                                ),
                                     ],
                                     spacing=5,
                                 ),
