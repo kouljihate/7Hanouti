@@ -11,7 +11,7 @@ from app.screens.settings_screen import SettingsScreen
 def main(page: ft.Page):
     init_db()
 
-    page.title = "7Hanouti"
+    page.title = "eDrogery"
     page.theme_mode = page.session.store.get("theme_mode") or "dark"
     page.rtl = True
     page.window.width = 360
@@ -59,13 +59,7 @@ def main(page: ft.Page):
             controls=[
                 ft.Container(content=content, expand=True),
             ],
-            bottom_appbar=ft.BottomAppBar(
-                content=ft.Container(
-                    content=nav_bar,
-                    padding=ft.Padding(left=10, top=0, right=10, bottom=0),
-                ),
-                height=70,
-            ),
+            navigation_bar=nav_bar,
             padding=10,
         )
         page.views.append(view)

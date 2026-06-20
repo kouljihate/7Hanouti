@@ -102,7 +102,7 @@ AR = {
 }
 
 FR = {
-    "app_title": "7Hanouti",
+    "app_title": "eDrogery",
     "login": "Connexion",
     "register": "Créer un compte",
     "email": "E-mail",
@@ -165,7 +165,7 @@ FR = {
     "movements": "Mouvements",
     "transactions": "Transactions",
     "overview": "Aperçu",
-    "welcome": "Bienvenue sur 7Hanouti",
+    "welcome": "Bienvenue sur eDrogery",
     "login_subtitle": "Connectez-vous pour gérer votre stock et votre caisse",
     "register_subtitle": "Créez un compte pour gérer votre magasin",
     "first_run_title": "Bienvenue ! Première fois ?",
@@ -205,7 +205,7 @@ FR = {
 }
 
 EN = {
-    "app_title": "7Hanouti",
+    "app_title": "eDrogery",
     "login": "Login",
     "register": "Create Account",
     "email": "Email",
@@ -268,7 +268,7 @@ EN = {
     "movements": "Movements",
     "transactions": "Transactions",
     "overview": "Overview",
-    "welcome": "Welcome to 7Hanouti",
+    "welcome": "Welcome to eDrogery",
     "login_subtitle": "Sign in to manage your stock and cash",
     "register_subtitle": "Create an account to start managing your store",
     "first_run_title": "Welcome! First time?",

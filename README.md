@@ -1,4 +1,4 @@
-# 7Hanouti (حانوتي)
+# eDrogery
 
 A cross-platform inventory and cash management application for small shop owners, built with Python and [Flet](https://flet.dev).
 
@@ -23,8 +23,8 @@ A cross-platform inventory and cash management application for small shop owners
 
 ```bash
 # Clone the repository
-git clone https://github.com/kouljihate/7Hanouti.git
-cd 7Hanouti
+git clone https://github.com/kouljihate/eDrogery.git
+cd eDrogery
 
 # Run (auto-installs dependencies)
 python run.py
@@ -40,7 +40,7 @@ python main.py
 ## Project Structure
 
 ```
-7Hanouti/
+eDrogery/
 ├── app/
 │   ├── screens/          # UI screens (login, dashboard, stock, cash, settings)
 │   ├── database.py       # SQLite database operations
