@@ -1,9 +1,12 @@
 import flet as ft
+import base64
 from app.database import (get_products, add_product, update_product, delete_product,
                           add_stock_movement, get_stock_movements, get_product, add_transaction)
 from app.translations import get_translation as t
 from app.theme import AppTheme
 from app.currency import get_currency_symbol
+from app.barcode import generate_barcode_image, generate_unique_code
+from app.printing import print_stickers as _print_stickers
 
 
 class StockScreen(ft.Container):
@@ -23,9 +26,14 @@ class StockScreen(ft.Container):
                 ft.Row(
                     [
                         ft.Text(t(lang, "products"), size=24, weight=ft.FontWeight.BOLD),
-                        ft.FloatingActionButton(
-                            icon=ft.Icons.ADD,
-                            on_click=self._show_add_dialog,
+                        ft.Row(
+                            [
+                                ft.IconButton(ft.Icons.LOCAL_PRINT_SHOP, tooltip=t(lang, "print_stickers"), on_click=self._show_print_dialog),
+                                ft.FloatingActionButton(
+                                    icon=ft.Icons.ADD,
+                                    on_click=self._show_add_dialog,
+                                ),
+                            ],
                         ),
                     ],
                     alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
@@ -73,21 +81,26 @@ class StockScreen(ft.Container):
                                         ft.IconButton(ft.Icons.DELETE, on_click=lambda e, pid=p["id"]: self._confirm_delete(pid)),
                                     ]
                                 ),
-                                ft.Row(
-                                    [
-                                        ft.Text(f"{t(lang, 'quantity')}: {p['quantity']}"),
-                                        ft.Text(f"{t(lang, 'price')}: {p['price']:.2f} {get_currency_symbol(self._page)}"),
-                                        ft.Text(f"{t(lang, 'category')}: {p.get('category', '')}"),
-                                    ],
-                                    spacing=20,
-                                ),
-                                ft.Row(
-                                    [
-                                        ft.Text(f"{t(lang, 'buying_price')}: {p.get('buying_price', 0):.2f} {get_currency_symbol(self._page)}"),
-                                        ft.Text(f"{t(lang, 'supplier_name')}: {p.get('supplier_name', '') or '-'}"),
-                                    ],
-                                    spacing=20,
-                                ) if p.get('buying_price', 0) > 0 else ft.Container(),
+                ft.Row(
+                    [
+                        ft.Text(f"{t(lang, 'quantity')}: {p['quantity']}"),
+                        ft.Text(f"{t(lang, 'price')}: {p['price']:.2f} {get_currency_symbol(self._page)}"),
+                        ft.Text(f"{t(lang, 'category')}: {p.get('category', '')}"),
+                    ],
+                    spacing=20,
+                ),
+                ft.Row(
+                    [
+                        ft.Text(f"{t(lang, 'buying_price')}: {p.get('buying_price', 0):.2f} {get_currency_symbol(self._page)}"),
+                        ft.Text(f"{t(lang, 'supplier_name')}: {p.get('supplier_name', '') or '-'}"),
+                    ],
+                    spacing=20,
+                ) if p.get('buying_price', 0) > 0 else ft.Container(),
+                ft.Row(
+                    [
+                        ft.Text(f"{t(lang, 'barcode')}: {p.get('barcode', '')}", size=12, opacity=0.7),
+                    ],
+                ) if p.get('barcode', '') else ft.Container(),
                                 ft.Row(
                                     [
                                         ft.IconButton(
@@ -192,6 +205,44 @@ class StockScreen(ft.Container):
                                        text_align=ft.TextAlign.RIGHT, expand=True)
         supplier_em_inp = ft.TextField(label=t(lang, "supplier_email"), value=product.get("supplier_email", "") if is_edit else "",
                                        text_align=ft.TextAlign.RIGHT, expand=True)
+        barcode_inp = ft.TextField(label=t(lang, "barcode"), value=product.get("barcode", "") if is_edit else "",
+                                    text_align=ft.TextAlign.RIGHT, expand=True)
+        barcode_img = ft.Image(visible=False, height=50, fit=ft.ImageFit.CONTAIN)
+
+        def generate_code_action(e):
+            existing = {p.get("barcode", "") for p in self.products if p.get("barcode")}
+            code = generate_unique_code(existing)
+            barcode_inp.value = code
+            img_bytes = generate_barcode_image(code)
+            b64 = base64.b64encode(img_bytes).decode()
+            barcode_img.src_base64 = b64
+            barcode_img.visible = True
+            self._page.update()
+
+        def on_barcode_change(e):
+            val = barcode_inp.value.strip()
+            if val:
+                try:
+                    img_bytes = generate_barcode_image(val)
+                    b64 = base64.b64encode(img_bytes).decode()
+                    barcode_img.src_base64 = b64
+                    barcode_img.visible = True
+                except Exception:
+                    barcode_img.visible = False
+            else:
+                barcode_img.visible = False
+            self._page.update()
+
+        barcode_inp.on_change = on_barcode_change
+
+        if is_edit and product.get("barcode"):
+            try:
+                img_bytes = generate_barcode_image(product["barcode"])
+                b64 = base64.b64encode(img_bytes).decode()
+                barcode_img.src_base64 = b64
+                barcode_img.visible = True
+            except Exception:
+                pass
 
         def save_action(e):
             try:
@@ -207,6 +258,7 @@ class StockScreen(ft.Container):
                     supplier_name=supplier_inp.value.strip(),
                     supplier_whatsapp=supplier_wp_inp.value.strip(),
                     supplier_email=supplier_em_inp.value.strip(),
+                    barcode=barcode_inp.value.strip(),
                 )
                 if is_edit:
                     update_product(product["id"], **data)
@@ -220,7 +272,9 @@ class StockScreen(ft.Container):
         dlg = ft.AlertDialog(
             title=ft.Text(t(lang, "edit_product" if is_edit else "add_product")),
             content=ft.Column([name_inp, qty_inp, price_inp, buying_price_inp, cat_inp, pkg_inp, desc_inp, low_inp,
-                               supplier_inp, supplier_wp_inp, supplier_em_inp],
+                               supplier_inp, supplier_wp_inp, supplier_em_inp,
+                               ft.Row([barcode_inp, ft.IconButton(ft.Icons.QR_CODE_SCANNER, on_click=generate_code_action)]),
+                               barcode_img],
                               scroll=ft.ScrollMode.AUTO),
             actions=[
                 ft.TextButton(t(lang, "cancel"), on_click=lambda e: self._page.pop_dialog()),
@@ -343,6 +397,39 @@ class StockScreen(ft.Container):
             title=ft.Text(t(lang, "movement_history")),
             content=ft.Container(content=content),
             actions=[ft.TextButton(t(lang, "cancel"), on_click=lambda e: self._page.pop_dialog())],
+        )
+        self._page.show_dialog(dlg)
+
+    def _show_print_dialog(self, e):
+        lang = self._page.session.store.get("lang") or "ar"
+        filtered = [p for p in self.products
+                    if not self._search_query or self._search_query.lower() in p["name"].lower()
+                    or self._search_query.lower() in p.get("category", "").lower()]
+        products_with_barcode = [p for p in filtered if p.get("barcode", "")]
+        if not products_with_barcode:
+            self._page.show_snack_bar(ft.SnackBar(ft.Text(t(lang, "no_data"))))
+            return
+
+        checks = {p["id"]: ft.Checkbox(label=p["name"], value=True) for p in products_with_barcode}
+
+        def do_print(e):
+            selected = [p for p in products_with_barcode if checks[p["id"]].value]
+            if not selected:
+                return
+            self._page.pop_dialog()
+            _print_stickers(selected)
+
+        dlg = ft.AlertDialog(
+            title=ft.Text(t(lang, "print_stickers")),
+            content=ft.Column(
+                list(checks.values()),
+                scroll=ft.ScrollMode.AUTO,
+                height=400,
+            ),
+            actions=[
+                ft.TextButton(t(lang, "cancel"), on_click=lambda e: self._page.pop_dialog()),
+                ft.FilledButton(t(lang, "print_stickers"), on_click=do_print),
+            ],
         )
         self._page.show_dialog(dlg)
 

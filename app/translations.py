@@ -99,6 +99,9 @@ AR = {
     "supplier_email": "البريد الإلكتروني للمورد",
     "buying_price": "سعر الشراء",
     "potential_profit": "الأرباح المتوقعة",
+    "barcode": "الباركود",
+    "generate_barcode": "إنشاء باركود",
+    "print_stickers": "طباعة ملصقات",
 }
 
 FR = {
@@ -202,6 +205,9 @@ FR = {
     "supplier_email": "E-mail du fournisseur",
     "buying_price": "Prix d'achat",
     "potential_profit": "Bénéfice potentiel",
+    "barcode": "Code-barres",
+    "generate_barcode": "Générer code-barres",
+    "print_stickers": "Imprimer étiquettes",
 }
 
 EN = {
@@ -305,6 +311,9 @@ EN = {
     "supplier_email": "Supplier Email",
     "buying_price": "Buying Price",
     "potential_profit": "Potential Profit",
+    "barcode": "Barcode",
+    "generate_barcode": "Generate Barcode",
+    "print_stickers": "Print Stickers",
 }
 
 

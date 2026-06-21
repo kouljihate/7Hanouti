@@ -26,6 +26,10 @@ def _migrate_schema():
         conn.execute("ALTER TABLE products ADD COLUMN buying_price REAL DEFAULT 0")
     except sqlite3.OperationalError:
         pass
+    try:
+        conn.execute("ALTER TABLE products ADD COLUMN barcode TEXT DEFAULT ''")
+    except sqlite3.OperationalError:
+        pass
     conn.commit()
     conn.close()
 
@@ -130,14 +134,15 @@ def get_user(user_id: int):
 
 def add_product(user_id: int, name: str, quantity: float, price: float, buying_price: float,
                 category: str, packaging: str, description: str, low_stock_qty: float,
-                supplier_name: str = "", supplier_whatsapp: str = "", supplier_email: str = "") -> int:
+                supplier_name: str = "", supplier_whatsapp: str = "", supplier_email: str = "",
+                barcode: str = "") -> int:
     conn = _get_connection()
     cursor = conn.execute(
         """INSERT INTO products (user_id, name, quantity, price, buying_price, category, packaging,
-           description, low_stock_qty, supplier_name, supplier_whatsapp, supplier_email)
-           VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
+           description, low_stock_qty, supplier_name, supplier_whatsapp, supplier_email, barcode)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
         (user_id, name, quantity, price, buying_price, category, packaging,
-         description, low_stock_qty, supplier_name, supplier_whatsapp, supplier_email),
+         description, low_stock_qty, supplier_name, supplier_whatsapp, supplier_email, barcode),
     )
     conn.commit()
     conn.close()
@@ -146,14 +151,15 @@ def add_product(user_id: int, name: str, quantity: float, price: float, buying_p
 
 def update_product(product_id: int, name: str, quantity: float, price: float, buying_price: float,
                    category: str, packaging: str, description: str, low_stock_qty: float,
-                   supplier_name: str = "", supplier_whatsapp: str = "", supplier_email: str = ""):
+                   supplier_name: str = "", supplier_whatsapp: str = "", supplier_email: str = "",
+                   barcode: str = ""):
     conn = _get_connection()
     conn.execute(
         """UPDATE products SET name=?, quantity=?, price=?, buying_price=?, category=?, packaging=?,
            description=?, low_stock_qty=?, supplier_name=?, supplier_whatsapp=?, supplier_email=?,
-           updated_at=datetime('now') WHERE id=?""",
+           barcode=?, updated_at=datetime('now') WHERE id=?""",
         (name, quantity, price, buying_price, category, packaging, description,
-         low_stock_qty, supplier_name, supplier_whatsapp, supplier_email, product_id),
+         low_stock_qty, supplier_name, supplier_whatsapp, supplier_email, barcode, product_id),
     )
     conn.commit()
     conn.close()
@@ -178,6 +184,15 @@ def get_products(user_id: int):
 def get_product(product_id: int):
     conn = _get_connection()
     row = conn.execute("SELECT * FROM products WHERE id = ?", (product_id,)).fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+
+def get_product_by_barcode(barcode: str, user_id: int):
+    conn = _get_connection()
+    row = conn.execute(
+        "SELECT * FROM products WHERE barcode = ? AND user_id = ?", (barcode, user_id)
+    ).fetchone()
     conn.close()
     return dict(row) if row else None
 
