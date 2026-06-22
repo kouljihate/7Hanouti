@@ -1,7 +1,8 @@
 import flet as ft
 import base64
 from app.database import (get_products, add_product, update_product, delete_product,
-                          add_stock_movement, get_stock_movements, get_product, add_transaction)
+                          add_stock_movement, get_stock_movements, get_product, add_transaction,
+                          get_customers, add_customer, add_credit_note)
 from app.translations import get_translation as t
 from app.theme import AppTheme
 from app.currency import get_currency_symbol
@@ -104,9 +105,15 @@ class StockScreen(ft.Container):
                                 ft.Row(
                                     [
                                         ft.IconButton(
-                                            icon=ft.Icons.PAYMENT,
+                                            icon=ft.Icons.SHOPPING_CART,
                                             expand=True,
                                             on_click=lambda e, pid=p["id"]: self._show_sell_dialog(pid),
+                                        ),
+                                        ft.IconButton(
+                                            icon=ft.Icons.CREDIT_CARD,
+                                            expand=True,
+                                            tooltip=t(lang, "sell_on_credit"),
+                                            on_click=lambda e, pid=p["id"]: self._show_credit_sell_dialog(pid),
                                         ),
                                     ],
                                     spacing=5,
@@ -207,7 +214,7 @@ class StockScreen(ft.Container):
                                        text_align=ft.TextAlign.RIGHT, expand=True)
         barcode_inp = ft.TextField(label=t(lang, "barcode"), value=product.get("barcode", "") if is_edit else "",
                                     text_align=ft.TextAlign.RIGHT, expand=True)
-        barcode_img = ft.Image(visible=False, height=50, fit=ft.ImageFit.CONTAIN)
+        barcode_img = ft.Image(src="", visible=False, height=50, fit=ft.BoxFit.CONTAIN)
 
         def generate_code_action(e):
             existing = {p.get("barcode", "") for p in self.products if p.get("barcode")}
@@ -328,6 +335,94 @@ class StockScreen(ft.Container):
         )
         self._page.show_dialog(dlg)
 
+    def _show_credit_sell_dialog(self, product_id):
+        p = get_product(product_id)
+        if not p:
+            return
+        lang = self._page.session.store.get("lang") or "ar"
+        user_id = self._page.session.store.get("user_id")
+        customers = get_customers(user_id) if user_id else []
+        price_per_unit = p["price"]
+
+        qty_inp = ft.TextField(label=t(lang, "sell_qty"), value="1",
+                                keyboard_type=ft.KeyboardType.NUMBER, text_align=ft.TextAlign.RIGHT, expand=True)
+        total_text = ft.Text(f"{t(lang, 'amount')}: {price_per_unit:.2f} {get_currency_symbol(self._page)}",
+                             size=16, weight=ft.FontWeight.BOLD)
+
+        customer_dd = ft.Dropdown(
+            label=t(lang, "select_customer"),
+            options=[ft.dropdown.Option(str(c["id"]), c["name"]) for c in customers],
+            expand=True,
+        )
+        new_name = ft.TextField(label=t(lang, "customer_name"), text_align=ft.TextAlign.RIGHT, expand=True, visible=not customers)
+        new_phone = ft.TextField(label=t(lang, "customer_phone"), text_align=ft.TextAlign.RIGHT, expand=True, visible=not customers)
+        toggle_btn = ft.TextButton(
+            t(lang, "add_customer") if customers else t(lang, "select_customer"),
+            on_click=lambda e: _toggle_customer(),
+        )
+
+        def _toggle_customer():
+            if new_name.visible:
+                new_name.visible = False
+                new_phone.visible = False
+                customer_dd.visible = True
+                toggle_btn.text = t(lang, "add_customer")
+            else:
+                new_name.visible = True
+                new_phone.visible = True
+                customer_dd.visible = False
+                toggle_btn.text = t(lang, "select_customer")
+            self._page.update()
+
+        def on_qty_change(e):
+            try:
+                q = float(qty_inp.value or 0)
+                total_text.value = f"{t(lang, 'amount')}: {q * price_per_unit:.2f} {get_currency_symbol(self._page)}"
+                total_text.update()
+            except ValueError:
+                pass
+        qty_inp.on_change = on_qty_change
+
+        def do_credit_sell(e):
+            try:
+                qty = float(qty_inp.value or 0)
+                if qty <= 0 or qty > p["quantity"]:
+                    return
+                total = qty * price_per_unit
+                cid = None
+                if new_name.visible and new_name.value.strip():
+                    cid = add_customer(user_id, new_name.value.strip(), new_phone.value.strip())
+                elif customer_dd.value:
+                    cid = int(customer_dd.value)
+                else:
+                    return
+                items = [(product_id, p["name"], qty, price_per_unit, total)]
+                add_credit_note(user_id, cid, items)
+                add_stock_movement(product_id, user_id, "out", qty, note=f"Credit sale")
+                self._page.pop_dialog()
+                self._refresh()
+            except ValueError:
+                pass
+
+        dlg = ft.AlertDialog(
+            title=ft.Text(f"{t(lang, 'sell_on_credit')} - {p['name']}"),
+            content=ft.Column(
+                [
+                    ft.Row([customer_dd], vertical_alignment=ft.CrossAxisAlignment.START),
+                    new_name, new_phone, toggle_btn,
+                    ft.Divider(),
+                    qty_inp, total_text,
+                ],
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                scroll=ft.ScrollMode.AUTO,
+            ),
+            actions=[
+                ft.TextButton(t(lang, "cancel"), on_click=lambda e: self._page.pop_dialog()),
+                ft.FilledButton(t(lang, "save"), on_click=do_credit_sell),
+            ],
+        )
+        self._page.show_dialog(dlg)
+
     def _show_movement_dialog(self, product_id, mtype):
         lang = self._page.session.store.get("lang") or "ar"
         qty_inp = ft.TextField(label=t(lang, "quantity"), value="0",
@@ -407,7 +502,7 @@ class StockScreen(ft.Container):
                     or self._search_query.lower() in p.get("category", "").lower()]
         products_with_barcode = [p for p in filtered if p.get("barcode", "")]
         if not products_with_barcode:
-            self._page.show_snack_bar(ft.SnackBar(ft.Text(t(lang, "no_data"))))
+            self._page.show_dialog(ft.SnackBar(ft.Text(t(lang, "no_data"))))
             return
 
         checks = {p["id"]: ft.Checkbox(label=p["name"], value=True) for p in products_with_barcode}

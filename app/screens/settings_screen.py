@@ -36,9 +36,9 @@ class SettingsScreen(ft.Container):
                             ft.SegmentedButton(
                                 segments=[
                                     ft.Segment("light", label=ft.Text(t(lang, "light_mode")),
-                                               icon=ft.Icons.LIGHT_MODE),
+                                               icon=ft.Icons.SUNNY),
                                     ft.Segment("dark", label=ft.Text(t(lang, "dark_mode")),
-                                               icon=ft.Icons.DARK_MODE),
+                                               icon=ft.Icons.BEDTIME),
                                 ],
                                 selected=["dark" if is_dark else "light"],
                                 on_change=self._on_theme_change,

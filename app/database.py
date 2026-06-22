@@ -88,6 +88,49 @@ def init_db():
             description TEXT DEFAULT '',
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         );
+
+        CREATE TABLE IF NOT EXISTS customers (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            name TEXT NOT NULL,
+            phone TEXT DEFAULT '',
+            created_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS credit_notes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            customer_id INTEGER NOT NULL,
+            total_amount REAL NOT NULL,
+            paid_amount REAL DEFAULT 0,
+            status TEXT DEFAULT 'open' CHECK(status IN ('open','closed')),
+            created_at TEXT DEFAULT (datetime('now')),
+            updated_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS credit_note_items (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            credit_note_id INTEGER NOT NULL,
+            product_id INTEGER,
+            product_name TEXT NOT NULL,
+            quantity REAL NOT NULL,
+            unit_price REAL NOT NULL,
+            total_price REAL NOT NULL,
+            FOREIGN KEY (credit_note_id) REFERENCES credit_notes(id) ON DELETE CASCADE,
+            FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS credit_payments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            credit_note_id INTEGER NOT NULL,
+            amount REAL NOT NULL,
+            date TEXT DEFAULT (datetime('now')),
+            note TEXT DEFAULT '',
+            FOREIGN KEY (credit_note_id) REFERENCES credit_notes(id) ON DELETE CASCADE
+        );
     """)
     conn.commit()
     conn.close()
@@ -243,6 +286,135 @@ def get_transactions(user_id: int, limit: int = 50):
     return [dict(r) for r in rows]
 
 
+def add_customer(user_id: int, name: str, phone: str = "") -> int:
+    conn = _get_connection()
+    cursor = conn.execute(
+        "INSERT INTO customers (user_id, name, phone) VALUES (?, ?, ?)",
+        (user_id, name, phone),
+    )
+    conn.commit()
+    conn.close()
+    return cursor.lastrowid
+
+
+def get_customers(user_id: int):
+    conn = _get_connection()
+    rows = conn.execute(
+        "SELECT * FROM customers WHERE user_id = ? ORDER BY name", (user_id,)
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def get_customer(customer_id: int):
+    conn = _get_connection()
+    row = conn.execute("SELECT * FROM customers WHERE id = ?", (customer_id,)).fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+
+def add_credit_note(user_id: int, customer_id: int, items: list):
+    conn = _get_connection()
+    total_amount = sum(item[4] for item in items)
+    cursor = conn.execute(
+        "INSERT INTO credit_notes (user_id, customer_id, total_amount) VALUES (?, ?, ?)",
+        (user_id, customer_id, total_amount),
+    )
+    cn_id = cursor.lastrowid
+    for item in items:
+        conn.execute(
+            """INSERT INTO credit_note_items (credit_note_id, product_id, product_name, quantity, unit_price, total_price)
+               VALUES (?, ?, ?, ?, ?, ?)""",
+            (cn_id, item[0], item[1], item[2], item[3], item[4]),
+        )
+    conn.commit()
+    conn.close()
+    return cn_id
+
+
+def get_credit_notes(user_id: int, status: str = None):
+    conn = _get_connection()
+    query = """SELECT cn.*, c.name as customer_name, c.phone as customer_phone
+               FROM credit_notes cn
+               JOIN customers c ON cn.customer_id = c.id
+               WHERE cn.user_id = ?"""
+    params = [user_id]
+    if status:
+        query += " AND cn.status = ?"
+        params.append(status)
+    query += " ORDER BY cn.created_at DESC"
+    rows = conn.execute(query, params).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def get_credit_note(cn_id: int):
+    conn = _get_connection()
+    row = conn.execute(
+        """SELECT cn.*, c.name as customer_name, c.phone as customer_phone
+           FROM credit_notes cn
+           JOIN customers c ON cn.customer_id = c.id
+           WHERE cn.id = ?""",
+        (cn_id,),
+    ).fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+
+def get_credit_note_items(cn_id: int):
+    conn = _get_connection()
+    rows = conn.execute(
+        "SELECT * FROM credit_note_items WHERE credit_note_id = ?", (cn_id,)
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def add_credit_payment(credit_note_id: int, amount: float, note: str = ""):
+    conn = _get_connection()
+    conn.execute(
+        "INSERT INTO credit_payments (credit_note_id, amount, note) VALUES (?, ?, ?)",
+        (credit_note_id, amount, note),
+    )
+    cn = conn.execute("SELECT * FROM credit_notes WHERE id = ?", (credit_note_id,)).fetchone()
+    new_paid = cn["paid_amount"] + amount
+    new_status = "closed" if abs(new_paid - cn["total_amount"]) < 0.001 else "open"
+    conn.execute(
+        "UPDATE credit_notes SET paid_amount = ?, status = ?, updated_at = datetime('now') WHERE id = ?",
+        (new_paid, new_status, credit_note_id),
+    )
+    conn.execute(
+        "INSERT INTO transactions (user_id, type, amount, category, description) VALUES (?, 'income', ?, 'Credit', ?)",
+        (cn["user_id"], amount, f"Credit payment for note #{credit_note_id}"),
+    )
+    conn.commit()
+    conn.close()
+
+
+def get_credit_payments(credit_note_id: int):
+    conn = _get_connection()
+    rows = conn.execute(
+        "SELECT * FROM credit_payments WHERE credit_note_id = ? ORDER BY date DESC",
+        (credit_note_id,),
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def get_credit_summary(user_id: int):
+    conn = _get_connection()
+    total = conn.execute(
+        "SELECT COALESCE(SUM(total_amount - paid_amount), 0) as total FROM credit_notes WHERE user_id = ? AND status = 'open'",
+        (user_id,),
+    ).fetchone()["total"]
+    count = conn.execute(
+        "SELECT COUNT(*) as cnt FROM credit_notes WHERE user_id = ? AND status = 'open'",
+        (user_id,),
+    ).fetchone()["cnt"]
+    conn.close()
+    return {"total_outstanding": total, "open_count": count}
+
+
 def get_dashboard_data(user_id: int):
     conn = _get_connection()
     stock_value = conn.execute(
@@ -269,6 +441,10 @@ def get_dashboard_data(user_id: int):
     product_count = conn.execute(
         "SELECT COUNT(*) as cnt FROM products WHERE user_id = ?", (user_id,)
     ).fetchone()["cnt"]
+    credit_outstanding = conn.execute(
+        "SELECT COALESCE(SUM(total_amount - paid_amount), 0) as tot FROM credit_notes WHERE user_id = ? AND status = 'open'",
+        (user_id,),
+    ).fetchone()["tot"]
     conn.close()
     return {
         "stock_value": stock_value,
@@ -279,4 +455,5 @@ def get_dashboard_data(user_id: int):
         "product_count": product_count,
         "cash_income": cash_income,
         "cash_expense": cash_expense,
+        "credit_outstanding": credit_outstanding,
     }

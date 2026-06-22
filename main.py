@@ -6,6 +6,7 @@ from app.screens.dashboard_screen import DashboardScreen
 from app.screens.stock_screen import StockScreen
 from app.screens.cash_screen import CashScreen
 from app.screens.settings_screen import SettingsScreen
+from app.screens.credit_screen import CreditScreen
 
 
 def main(page: ft.Page):
@@ -45,13 +46,14 @@ def main(page: ft.Page):
             DashboardScreen(page),
             StockScreen(page),
             CashScreen(page),
+            CreditScreen(page),
             SettingsScreen(page, on_logout=_logout, on_theme_change=_on_theme_change,
                             on_lang_change=_on_lang_change,
                             on_currency_change=lambda: _update_screen(nav_bar.selected_index)),
         ]
 
-        titles = [t(lang, "dashboard"), t(lang, "stock"), t(lang, "cash"), t(lang, "settings")]
-        icons = [ft.Icons.DASHBOARD, ft.Icons.INVENTORY, ft.Icons.ACCOUNT_BALANCE, ft.Icons.SETTINGS]
+        titles = [t(lang, "dashboard"), t(lang, "stock"), t(lang, "cash"), t(lang, "credit"), t(lang, "settings")]
+        icons = [ft.Icons.DASHBOARD, ft.Icons.INVENTORY, ft.Icons.ACCOUNT_BALANCE_WALLET, ft.Icons.CREDIT_CARD, ft.Icons.SETTINGS]
 
         content = screens[index] if index < len(screens) else screens[0]
         view = ft.View(
@@ -86,7 +88,8 @@ def main(page: ft.Page):
         destinations=[
             ft.NavigationBarDestination(icon=ft.Icons.DASHBOARD, label=t(page.session.store.get("lang") or "ar", "dashboard")),
             ft.NavigationBarDestination(icon=ft.Icons.INVENTORY, label=t(page.session.store.get("lang") or "ar", "stock")),
-            ft.NavigationBarDestination(icon=ft.Icons.ACCOUNT_BALANCE, label=t(page.session.store.get("lang") or "ar", "cash")),
+            ft.NavigationBarDestination(icon=ft.Icons.ACCOUNT_BALANCE_WALLET, label=t(page.session.store.get("lang") or "ar", "cash")),
+            ft.NavigationBarDestination(icon=ft.Icons.CREDIT_CARD, label=t(page.session.store.get("lang") or "ar", "credit")),
             ft.NavigationBarDestination(icon=ft.Icons.SETTINGS, label=t(page.session.store.get("lang") or "ar", "settings")),
         ],
         selected_index=0,
